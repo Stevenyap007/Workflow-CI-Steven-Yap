@@ -30,6 +30,8 @@ jobs:
 
       # 4. Run the training script (Basic/Skilled Requirement)
       - name: Run MLProject Training
+        env:
+          MLFLOW_ALLOW_FILE_STORE: "true"
         run: |
           cd MLProject
           python modelling.py
