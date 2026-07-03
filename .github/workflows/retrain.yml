@@ -1,0 +1,53 @@
+name: CI Pipeline & Docker Build
+
+# Triggers when you push code, or manually from the Actions tab
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  mlops-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Grab your code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Set up Python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # 3. Install MLflow and libraries
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install mlflow pandas scikit-learn numpy
+
+      # 4. Run the training script (Basic/Skilled Requirement)
+      - name: Run MLProject Training
+        run: |
+          cd MLProject
+          python modelling.py
+
+      # 5. Securely log into Docker Hub using your secrets
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # 6. Build the Docker Image using MLflow (Advanced Requirement)
+      - name: Build Docker Image
+        run: |
+          cd MLProject
+          mlflow models build-docker -m saved_model -n ${{ secrets.DOCKER_USERNAME }}/mall-customers-model:latest
+
+      # 7. Push the image to Docker Hub (Advanced Requirement)
+      - name: Push to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/mall-customers-model:latest
